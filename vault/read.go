@@ -3,6 +3,7 @@ package vault
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/aschmidt75/wireguard-vault-automesh/model"
 
@@ -68,15 +69,72 @@ func (vc *VaultContext) ReadNodes() (model.NodeMap, error) {
 			return res, err
 		}
 
+		if v.Data["data"] == nil {
+			log.Error("Internal error, node in vault is present but w/o data.")
+		}
 		d := v.Data["data"].(map[string]interface{})
 		log.WithField("d", d).Trace("ReadNodes.dump")
 
+		lp := 0
+		switch d["endpointPort"].(type) {
+		case json.Number:
+			lp0, err := d["endpointPort"].(json.Number).Int64()
+			if err != nil {
+				return res, err
+			}
+			lp = int(lp0)
+		case string:
+			lp, err = strconv.Atoi(d["endpointPort"].(string))
+			if err != nil {
+				return res, err
+			}
+		default:
+			log.Error("Unsupported typ")
+		}
 		res[key.(string)] = model.NodeInfo{
 			NodeID:             d["nodeID"].(string),
 			WireguardIP:        d["wgip"].(string),
 			WireguardPublicKey: d["pubkey"].(string),
+			ExternalIP:         d["endpointIP"].(string),
+			ListenPort:         int(lp),
 		}
 
+	}
+
+	return res, nil
+}
+
+// ReadNode reads a single node data from vault
+func (vc *VaultContext) ReadNode(key string) (model.NodeInfo, error) {
+	l := vc.Logical()
+
+	p := MetaDataPath("nodes")
+	log.WithField("path", p).Trace("Looking for nodes...")
+
+	res := model.NodeInfo{}
+
+	p = DataPath(fmt.Sprintf("nodes/%s", key))
+	v, err := l.Read(p)
+	if err != nil {
+		return res, err
+	}
+
+	if v.Data["data"] == nil {
+		log.Error("Internal error, node in vault is present but w/o data.")
+	}
+	d := v.Data["data"].(map[string]interface{})
+	log.WithField("d", d).Trace("ReadNodes.dump")
+
+	lp, err := d["endpointPort"].(json.Number).Int64()
+	if err != nil {
+		return res, err
+	}
+	res = model.NodeInfo{
+		NodeID:             d["nodeID"].(string),
+		WireguardIP:        d["wgip"].(string),
+		WireguardPublicKey: d["pubkey"].(string),
+		ExternalIP:         d["endpointIP"].(string),
+		ListenPort:         int(lp),
 	}
 
 	return res, nil

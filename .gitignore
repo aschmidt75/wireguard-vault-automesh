@@ -16,3 +16,4 @@
 
 wireguard-vault-automesh
 release/*
+sync.sh

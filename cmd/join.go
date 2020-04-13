@@ -10,10 +10,11 @@ import (
 
 // Join implements the "join" cli command
 func Join(cmd *cli.Cmd) {
-	cmd.Spec = "--name=<MESH-NAME> --id=<NODE-ID>"
+	cmd.Spec = "--name=<MESH-NAME> --id=<NODE-ID> --endpoint=<IP>"
 	var (
-		meshName = cmd.StringOpt("name", "", "Name of the new mesh to join")
-		nodeID   = cmd.StringOpt("id", "", "Identifier of this node. Must be unique across the mesh")
+		meshName   = cmd.StringOpt("name", "", "Name of the new mesh to join")
+		nodeID     = cmd.StringOpt("id", "", "Identifier of this node. Must be unique across the mesh")
+		endpointIP = cmd.StringOpt("endpoint e", "", "The IP of this node where wireguard traffic goes out to other nodes, e.g. eth0")
 	)
 
 	cmd.Action = func() {
@@ -27,6 +28,11 @@ func Join(cmd *cli.Cmd) {
 			os.Exit(exitMissingParams)
 		}
 		log.WithField("id", *nodeID).Trace("Param")
+		if *endpointIP == "" {
+			log.Errorf("Must set endpoint ip address using --endpoint.")
+			os.Exit(exitMissingParams)
+		}
+		log.WithField("endpoint", *endpointIP).Trace("Param")
 
 		vc := vault.Vault()
 
@@ -40,9 +46,11 @@ func Join(cmd *cli.Cmd) {
 		}
 
 		err = vc.Join(&vault.JoinRequest{
-			MeshName: *meshName,
-			MeshInfo: meshInfo,
-			NodeID:   *nodeID,
+			MeshName:   *meshName,
+			MeshInfo:   meshInfo,
+			NodeID:     *nodeID,
+			EndpointIP: *endpointIP,
+			ListenPort: 44444,
 		})
 		if err != nil {
 			log.WithError(err).Trace("internal error")
