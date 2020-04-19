@@ -147,18 +147,18 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 	}
 
 	// connect to all others
-	allowedIP := []net.IPNet{
-		net.IPNet{
-			IP:   wgi.IP,
-			Mask: net.IPv4Mask(255, 255, 255, 255),
-		},
-	}
 	for nodeKey, nodeData := range nodes {
 		if nodeKey == req.NodeID {
 			// this is us.
 			continue
 		}
 
+		allowedIP := []net.IPNet{
+			net.IPNet{
+				IP:   net.ParseIP(nodeData.WireguardIP),
+				Mask: net.IPv4Mask(255, 255, 255, 255),
+			},
+		}
 		err := wgi.AddPeer(nodeData.ExternalIP, nodeData.ListenPort, nodeData.WireguardPublicKey, allowedIP, nil)
 		if err != nil {
 			log.WithFields(log.Fields{

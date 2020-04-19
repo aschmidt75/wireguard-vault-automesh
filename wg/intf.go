@@ -95,10 +95,6 @@ func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 			e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
 			return errors.New(e)
 		}
-		log.WithFields(log.Fields{
-			"intfName": i.Name,
-			"ip":       a[0],
-		}).Tracef("added ip to interface")
 	}
 
 	a, err = i.Addrs()
@@ -106,6 +102,10 @@ func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 		e := fmt.Sprintf("unable to add ip address %s to interface %s: %s", wgi.IP.String(), wgi.InterfaceName, err)
 		return errors.New(e)
 	}
+	log.WithFields(log.Fields{
+		"intfName": i.Name,
+		"ip":       a[0],
+	}).Tracef("added ip to interface")
 
 	return nil
 }

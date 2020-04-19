@@ -71,6 +71,7 @@ func (vc *VaultContext) ReadNodes() (model.NodeMap, error) {
 
 		if v.Data["data"] == nil {
 			log.Error("Internal error, node in vault is present but w/o data.")
+			return res, nil
 		}
 		d := v.Data["data"].(map[string]interface{})
 		log.WithField("d", d).Trace("ReadNodes.dump")
