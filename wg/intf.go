@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os/exec"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	wg "golang.zx2c4.com/wireguard/wgctrl"
@@ -113,7 +114,7 @@ func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 func (wgi *WireguardInterface) EnsureInterfaceIsUp() error {
 
 	// bring up wireguard interface
-	cmd := exec.Command("/sbin/ip", "link", "set", "up", "dev", wgi.InterfaceName)
+	cmd := exec.Command("/sbin/ip", "--br", "link", "show", "dev", wgi.InterfaceName, "up", "type", "wireguard")
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -121,7 +122,67 @@ func (wgi *WireguardInterface) EnsureInterfaceIsUp() error {
 	if err != nil {
 		return err
 	}
-	_, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	if len(errStr) > 0 {
+		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
+		return errors.New(e)
+	}
+	if len(outStr) > 0 {
+		// output should contain interface name an "UP" TODO
+		log.WithField("o", outStr).Trace("Interface is up")
+		return nil
+	}
+
+	// bring up wireguard interface
+	cmd = exec.Command("/sbin/ip", "link", "set", "up", "dev", wgi.InterfaceName)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	_, errStr = string(stdout.Bytes()), string(stderr.Bytes())
+	if len(errStr) > 0 {
+		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
+		return errors.New(e)
+	}
+
+	return nil
+}
+
+func (wgi *WireguardInterface) EnsureRouteIsSet(networkCIDR string) error {
+
+	//
+	cmd := exec.Command("/sbin/ip", "route", "show", "dev", wgi.InterfaceName)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	outStr, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	if len(errStr) > 0 {
+		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
+		return errors.New(e)
+	}
+	a := strings.Split(outStr, " ")
+	if len(a) > 0 {
+		if a[0] == networkCIDR {
+			log.WithField("o", outStr).Trace("Route present")
+			return nil
+		}
+	}
+
+	//
+	cmd = exec.Command("/sbin/ip", "route", "add", networkCIDR, "dev", wgi.InterfaceName)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	_, errStr = string(stdout.Bytes()), string(stderr.Bytes())
 	if len(errStr) > 0 {
 		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
 		return errors.New(e)
@@ -163,6 +224,10 @@ func (wgi *WireguardInterface) SetupInterfaceWithConfig() error {
 	}
 
 	if wgDevice.ListenPort == 0 {
+		if wgi.ListenPort == 0 {
+			return errors.New("wg listenPort may not be 0")
+		}
+
 		newConfig := wgtypes.Config{
 			ListenPort: &wgi.ListenPort,
 		}
@@ -178,13 +243,17 @@ func (wgi *WireguardInterface) SetupInterfaceWithConfig() error {
 	if err != nil {
 		return err
 	}
+	if wgDevice == nil {
+		return errors.New("error reading wg device configuration")
+	}
+	//log.WithField("wgd", *wgDevice).Trace("SetupInterfaceWithConfig.dump") // caution: dumps private key
 
 	if bytes.Compare(wgDevice.PrivateKey[:], emptyBytes32) == 0 || bytes.Compare(wgDevice.PublicKey[:], emptyBytes32) == 0 || wgDevice.ListenPort == 0 {
-		return errors.New("unable to set wireguard configuration")
+		return errors.New("unable to set wireguard key configuration")
 	}
 
 	wgi.PublicKey = base64.StdEncoding.EncodeToString(wgDevice.PublicKey[:])
-	log.WithField("pubkey", wgi.PublicKey).Trace("dump")
+	log.WithField("pubkey", wgi.PublicKey).Trace("SetupInterfaceWithConfig.dump")
 
 	return nil
 }

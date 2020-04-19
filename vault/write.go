@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (vc *VaultContext) WriteNodeData(nodeInfo model.NodeInfo) error {
+func (vc *VaultContext) WriteNodeData(meshName string, nodeInfo model.NodeInfo) error {
 	data := map[string]interface{}{
 		"data": map[string]interface{}{
 			"nodeID":       nodeInfo.NodeID,
@@ -20,12 +20,12 @@ func (vc *VaultContext) WriteNodeData(nodeInfo model.NodeInfo) error {
 	log.WithFields(log.Fields{
 		"data": data,
 	}).Trace("writing to vault")
-	_, err := vc.Logical().Write(DataPath(fmt.Sprintf("nodes/%s", nodeInfo.NodeID)), data)
+	_, err := vc.Logical().Write(DataPath(meshName, fmt.Sprintf("nodes/%s", nodeInfo.NodeID)), data)
 	return err
 }
 
-func (vc *VaultContext) UpdateEndpoint(nodeIDKey string, endpointIP string, listenPort int) error {
-	nodeInfo, err := vc.ReadNode(nodeIDKey)
+func (vc *VaultContext) UpdateEndpoint(meshName string, nodeIDKey string, endpointIP string, listenPort int) error {
+	nodeInfo, err := vc.ReadNode(meshName, nodeIDKey)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func (vc *VaultContext) UpdateEndpoint(nodeIDKey string, endpointIP string, list
 	log.WithFields(log.Fields{
 		"data": data,
 	}).Trace("writing to vault")
-	_, err = vc.Logical().Write(DataPath(fmt.Sprintf("nodes/%s", nodeIDKey)), data)
+	_, err = vc.Logical().Write(DataPath(meshName, fmt.Sprintf("nodes/%s", nodeIDKey)), data)
 	if err != nil {
 		log.WithError(err).Error("Error writing to vault. Please check address and token")
 		return err

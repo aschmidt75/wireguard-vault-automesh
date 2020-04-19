@@ -19,12 +19,12 @@ func (vc *VaultContext) Create(name string, networkCidr string) (bool, error) {
 
 	l := vc.Logical()
 
-	p := DataPath("mp")
+	p := DataPath(name, "mp")
 	log.WithField("path", p).Trace("Looking for meeting point")
 
 	s, err := l.Read(p)
 	if err != nil {
-		log.WithError(err).Error("Error reading from vault. Please check address and token")
+		log.WithError(err).Error("Error reading from vault. Please check address and token.")
 		return false, err
 	}
 	if s == nil || s.Data["data"] == nil {
@@ -43,7 +43,7 @@ func (vc *VaultContext) Create(name string, networkCidr string) (bool, error) {
 		log.WithField("data", data).Trace("writing to vault")
 		s, err = l.Write(p, data)
 		if err != nil {
-			log.WithError(err).Error("Error writing to vault. Please check address and token")
+			log.WithError(err).Error("Error writing to vault. Please check address and token.")
 			return false, err
 		}
 

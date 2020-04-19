@@ -11,10 +11,10 @@ import (
 )
 
 // ReadMeetingPoint accesses vault to read the mesh namework data from the meeting point
-func (vc *VaultContext) ReadMeetingPoint(name string) (*model.MeshInfo, error) {
+func (vc *VaultContext) ReadMeetingPoint(meshName string) (*model.MeshInfo, error) {
 	l := vc.Logical()
 
-	p := DataPath("mp")
+	p := DataPath(meshName, "mp")
 	log.WithField("path", p).Trace("Looking for meeting point")
 
 	s, err := l.Read(p)
@@ -43,10 +43,10 @@ func (vc *VaultContext) ReadMeetingPoint(name string) (*model.MeshInfo, error) {
 }
 
 // ReadNodes reads the list of nodes from vault
-func (vc *VaultContext) ReadNodes() (model.NodeMap, error) {
+func (vc *VaultContext) ReadNodes(meshName string) (model.NodeMap, error) {
 	l := vc.Logical()
 
-	p := MetaDataPath("nodes")
+	p := MetaDataPath(meshName, "nodes")
 	log.WithField("path", p).Trace("Looking for nodes...")
 
 	res := make(model.NodeMap, 0)
@@ -63,7 +63,7 @@ func (vc *VaultContext) ReadNodes() (model.NodeMap, error) {
 
 	for _, key := range keys {
 
-		p = DataPath(fmt.Sprintf("nodes/%s", key.(string)))
+		p = DataPath(meshName, fmt.Sprintf("nodes/%s", key.(string)))
 		v, err := l.Read(p)
 		if err != nil {
 			return res, err
@@ -106,15 +106,15 @@ func (vc *VaultContext) ReadNodes() (model.NodeMap, error) {
 }
 
 // ReadNode reads a single node data from vault
-func (vc *VaultContext) ReadNode(key string) (model.NodeInfo, error) {
+func (vc *VaultContext) ReadNode(meshName, key string) (model.NodeInfo, error) {
 	l := vc.Logical()
 
-	p := MetaDataPath("nodes")
+	p := MetaDataPath(meshName, "nodes")
 	log.WithField("path", p).Trace("Looking for nodes...")
 
 	res := model.NodeInfo{}
 
-	p = DataPath(fmt.Sprintf("nodes/%s", key))
+	p = DataPath(meshName, fmt.Sprintf("nodes/%s", key))
 	v, err := l.Read(p)
 	if err != nil {
 		return res, err
@@ -124,7 +124,7 @@ func (vc *VaultContext) ReadNode(key string) (model.NodeInfo, error) {
 		log.Error("Internal error, node in vault is present but w/o data.")
 	}
 	d := v.Data["data"].(map[string]interface{})
-	log.WithField("d", d).Trace("ReadNodes.dump")
+	log.WithField("d", d).Trace("ReadNode.dump")
 
 	lp, err := d["endpointPort"].(json.Number).Int64()
 	if err != nil {

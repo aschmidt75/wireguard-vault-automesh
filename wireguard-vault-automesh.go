@@ -24,8 +24,8 @@ func main() {
 	app.Spec = "[-d] [-v]"
 
 	debug := app.BoolOpt("d debug", c.Debug, "Show debug messages (env: WGVAM_LOG_DEBUG)")
-	verbose := app.BoolOpt("v verbose", c.Verbose, "Show information. Default: false. False equals to being quiet (env: WGVAM_LOG_VERBOSE)")
-	vaultAddrParam := app.StringOpt("a addr", c.VaultAddr, "Set vault endpoint (env: WGVAM_LOG_ADDR)")
+	verbose := app.BoolOpt("v verbose", c.Verbose, "Show information. Default: true. False equals to being quiet (env: WGVAM_LOG_VERBOSE)")
+	vaultAddrParam := app.StringOpt("a addr", c.VaultAddr, "Set vault endpoint (env: WGVAM_VAULT_ADDR)")
 
 	app.Command("join", "join a wireguard mesh", cmd.Join)
 	app.Command("create", "create a wireguard mesh meeting point", cmd.Create)
@@ -41,10 +41,9 @@ func main() {
 
 		log.WithField("cfg", c).Trace("config")
 
-		// must have a token
+		// issue warning if we do not have a token. may continue using vault agent.
 		if len(c.VaultToken) == 0 {
-			log.Error("Must supply a valid vault token as environment paramter WGVAM_VAULT_TOKEN to continue.")
-			os.Exit(10)
+			log.Warn("No vault token supplied, trying without. (env: WGVAM_VAULT_TOKEN)")
 		}
 		if len(*vaultAddrParam) > 0 {
 			c.VaultAddr = *vaultAddrParam

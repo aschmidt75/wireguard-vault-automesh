@@ -8,12 +8,13 @@ import (
 type Configuration struct {
 	Trace   bool `env:"WGVAM_LOG_TRACE" envDefault:"false"`
 	Debug   bool `env:"WGVAM_LOG_DEBUG" envDefault:"false"`
-	Verbose bool `env:"WGVAM_LOG_VERBOSE" envDefault:"false"`
+	Verbose bool `env:"WGVAM_LOG_VERBOSE" envDefault:"true"`
 
 	VaultAddr       string `env:"WGVAM_VAULT_ADDR" envDefault:"http://127.0.0.1:8200/"`
 	VaultToken      string `env:"WGVAM_VAULT_TOKEN" envDefault:""`
-	VaultBaseTree   string `env:"WGVAM_VAULT_BASE" envDefault:"wgvam"`
-	VaultEnginePath string `env:"WGVAM_VAULT_ENGINE_PATH" envDefault:"/secret"`
+	VaultEnginePath string `env:"WGVAM_VAULT_ENGINE_PATH" envDefault:"/wgvam"`
+
+	DefaultEndpointListenPort int `env:"WGVAM_LISTEN_PORT" envDefault:"44444"`
 }
 
 var (

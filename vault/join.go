@@ -28,8 +28,8 @@ func newIPInNet(networkCIDR string) (net.IP, error) {
 	}
 
 	ipmask := ipnet.Mask
-	log.WithField("ipmask", ipmask).Trace("dump")
-	log.WithField("ip", ip).Trace("dump")
+	//	log.WithField("ipmask", ipmask).Trace("dump")
+	//	log.WithField("ip", ip).Trace("dump")
 
 	newIP := [4]byte{
 		(byte(rand.Intn(250)+2) & ^ipmask[0]) + ip[12],
@@ -37,23 +37,25 @@ func newIPInNet(networkCIDR string) (net.IP, error) {
 		(byte(rand.Intn(250)) & ^ipmask[2]) + ip[14],
 		(byte(rand.Intn(250)+1) & ^ipmask[3]) + ip[15],
 	}
-	log.WithField("newIP", newIP).Trace("dump")
+	log.WithField("newIP", newIP).Trace("newIPInNet.dump")
 
 	return net.IPv4(newIP[0], newIP[1], newIP[2], newIP[3]), nil
 }
 
 // Join takes data from the JoinRequest to join the mesh
 func (vc *VaultContext) Join(req *JoinRequest) error {
+	log.WithField("req", *req).Trace("Join.param")
+
 	// read all nodes from vault for this mesh network
-	nodes, err := vc.ReadNodes()
+	nodes, err := vc.ReadNodes(req.MeshName)
 	if err != nil {
 		log.WithError(err).Error("Error reading from vault. Please check address and token")
 		return err
 	}
-	log.WithField("nodes", nodes).Trace("Join all nodes")
+	log.WithField("nodes", nodes).Debugf("Found %d nodes", len(nodes))
 
 	// ensure we have a wireguard interface w/ key
-	wgi, err := vc.setupWireguard(req.MeshInfo)
+	wgi, err := vc.setupWireguard(req)
 	if err != nil {
 		log.WithError(err).Error("Unable to set up wireguard interface")
 		return err
@@ -73,7 +75,7 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 
 		// add ourself to nodes list, but without the external
 		// ip, so no one can connect (yet)
-		err = vc.WriteNodeData(model.NodeInfo{
+		err = vc.WriteNodeData(req.MeshName, model.NodeInfo{
 			NodeID:             req.NodeID,
 			WireguardIP:        ip.String(),
 			WireguardPublicKey: wgi.PublicKey,
@@ -109,7 +111,7 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 	*/
 
 	// query all nodes. Check for duplicates on same public key...
-	nodes, err = vc.ReadNodes()
+	nodes, err = vc.ReadNodes(req.MeshName)
 	if err != nil {
 		log.WithError(err).Error("Error reading from vault")
 		return err
@@ -137,12 +139,12 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 	// at this point, we have a local wg interface with a public key
 	// that's uniquely present in the nodelist.
 	// - Assign the overlay IP address to the interface
-	log.WithField("wgi", wgi).Trace("dump")
+	log.WithField("wgi", wgi).Trace("Join.dump")
 	if err = wgi.EnsureIPAddressIsAssigned(); err != nil {
 		return err
 	}
 	// - Add our external IP to the nodelist so others can connect.
-	if err = vc.UpdateEndpoint(req.NodeID, req.EndpointIP, wgi.ListenPort); err != nil {
+	if err = vc.UpdateEndpoint(req.MeshName, req.NodeID, req.EndpointIP, wgi.ListenPort); err != nil {
 		return err
 	}
 
@@ -172,13 +174,25 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 	// 2nd stage: iterate through all peers of wg interface, remove
 	// those that are not in nodelist.
 
+	// interface and route handling
+	if err := wgi.EnsureInterfaceIsUp(); err != nil {
+		log.WithError(err).Error("Unable to up wg interface")
+		return err
+	}
+	log.WithField("dev", wgi.InterfaceName).Debug("Device up")
+	if err := wgi.EnsureRouteIsSet(req.MeshInfo.NetworkCIDR); err != nil {
+		log.WithError(err).Error("Unable to set route")
+		return err
+	}
+	log.WithField("dev", wgi.InterfaceName).Debug("Route set")
+
 	return nil
 }
 
-func (vc *VaultContext) setupWireguard(mi *model.MeshInfo) (*wg.WireguardInterface, error) {
+func (vc *VaultContext) setupWireguard(req *JoinRequest) (*wg.WireguardInterface, error) {
 	wgi := &wg.WireguardInterface{
-		InterfaceName: fmt.Sprintf("wg-%s", mi.Name),
-		ListenPort:    44444,
+		InterfaceName: fmt.Sprintf("wg-%s", req.MeshInfo.Name),
+		ListenPort:    req.ListenPort,
 	}
 	ex, err := wgi.HasInterface()
 	if err != nil || ex == false {

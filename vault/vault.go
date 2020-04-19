@@ -12,14 +12,15 @@ type VaultContext struct {
 	client *api.Client
 }
 
-func DataPath(p string) string {
-	return fmt.Sprintf("%s/data/%s/%s", config.Config().VaultEnginePath, config.Config().VaultBaseTree, p)
+func DataPath(meshName, p string) string {
+	return fmt.Sprintf("%s/data/%s/%s", config.Config().VaultEnginePath, meshName, p)
 }
 
-func MetaDataPath(p string) string {
-	return fmt.Sprintf("%s/metadata/%s/%s", config.Config().VaultEnginePath, config.Config().VaultBaseTree, p)
+func MetaDataPath(meshName, p string) string {
+	return fmt.Sprintf("%s/metadata/%s/%s", config.Config().VaultEnginePath, meshName, p)
 }
 
+// Vault returns a VaultContext struct with a token
 func Vault() *VaultContext {
 	c := config.Config()
 
