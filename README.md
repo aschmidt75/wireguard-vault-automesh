@@ -1,6 +1,7 @@
 # wireguard-vault-automesh
 Automatically connect nodes to a mesh using wireguard and vault.go buil
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/aschmidt75/wireguard-vault-automesh)](https://goreportcard.com/report/github.com/aschmidt75/wireguard-vault-automesh)
 
 ## Example setup
 
