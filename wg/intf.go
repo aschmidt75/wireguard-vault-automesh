@@ -74,6 +74,8 @@ func (wgi *WireguardInterface) AddInterface() error {
 // interface. if no ip has been assigned yet, the one from WireguardInterface is assigned.
 func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 
+	var err error
+
 	i, err := net.InterfaceByName(wgi.InterfaceName)
 	if err != nil {
 		return err
