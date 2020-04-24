@@ -27,8 +27,9 @@ func main() {
 	verbose := app.BoolOpt("v verbose", c.Verbose, "Show information. Default: true. False equals to being quiet (env: WGVAM_LOG_VERBOSE)")
 	vaultAddrParam := app.StringOpt("a addr", c.VaultAddr, "Set vault endpoint (env: WGVAM_VAULT_ADDR)")
 
-	app.Command("join", "join a wireguard mesh", cmd.Join)
 	app.Command("create", "create a wireguard mesh meeting point", cmd.Create)
+	app.Command("join", "join a wireguard mesh", cmd.Join)
+	app.Command("update", "update peers for a wireguard mesh", cmd.Update)
 
 	app.Before = func() {
 		if debug != nil {

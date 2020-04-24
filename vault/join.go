@@ -161,14 +161,16 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 				Mask: net.IPv4Mask(255, 255, 255, 255),
 			},
 		}
-		err := wgi.AddPeer(nodeData.ExternalIP, nodeData.ListenPort, nodeData.WireguardPublicKey, allowedIP, nil)
+		bAdded, err := wgi.AddPeer(nodeData.ExternalIP, nodeData.ListenPort, nodeData.WireguardPublicKey, allowedIP, nil)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"err":  err,
 				"data": nodeData,
 			}).Error("Error adding wireguard peer")
 		}
-		log.WithField("othernode", nodeData).Debug("Adding wg peer for this node")
+		if bAdded {
+			log.WithField("othernode", nodeData).Debug("Added wg peer")
+		}
 	}
 
 	// 2nd stage: iterate through all peers of wg interface, remove

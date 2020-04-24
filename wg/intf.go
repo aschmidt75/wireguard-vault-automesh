@@ -259,29 +259,41 @@ func (wgi *WireguardInterface) SetupInterfaceWithConfig() error {
 }
 
 // AddPeer adds a new peer to an existing interface
-func (wgi *WireguardInterface) AddPeer(remoteEndpointIP string, listenPort int, pubkey string, allowedIPs []net.IPNet, psk *string) error {
+func (wgi *WireguardInterface) AddPeer(remoteEndpointIP string, listenPort int, pubkey string, allowedIPs []net.IPNet, psk *string) (bool, error) {
 	wgClient, err := wg.New()
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer wgClient.Close()
+
+	pk, err := wgtypes.ParseKey(pubkey)
+	if err != nil {
+		return false, err
+	}
+
+	wgDevice, err := wgClient.Device(wgi.InterfaceName)
+	if err != nil {
+		return false, err
+	}
+	for _, peer := range wgDevice.Peers {
+		if peer.PublicKey == pk {
+			log.WithField("pubkey", pubkey).Trace("Already present, skipping")
+			return false, nil
+		}
+	}
 
 	var pskAsKey wgtypes.Key
 	if psk != nil {
 		pskAsKey, err = wgtypes.ParseKey(*psk)
 		if err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// process peer
-	pk, err := wgtypes.ParseKey(pubkey)
-	if err != nil {
-		return err
-	}
 	ep, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", remoteEndpointIP, listenPort))
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	newConfig := wgtypes.Config{
@@ -300,11 +312,11 @@ func (wgi *WireguardInterface) AddPeer(remoteEndpointIP string, listenPort int, 
 	log.WithFields(log.Fields{"new": newConfig}).Trace("adding peer...")
 	err = wgClient.ConfigureDevice(wgi.InterfaceName, newConfig)
 	if err != nil {
-		return err
+		return false, err
 	}
 	log.WithFields(log.Fields{"intf": wgi.InterfaceName, "PubKey": pubkey}).Info("Added peer.")
 
-	return nil
+	return true, nil
 }
 
 var (

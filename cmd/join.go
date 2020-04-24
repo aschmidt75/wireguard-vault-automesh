@@ -35,7 +35,6 @@ func Join(cmd *cli.Cmd) {
 			log.Errorf("Must set endpoint ip address using --endpoint.")
 			os.Exit(exitMissingParams)
 		}
-		// TODO: check endpoint
 		if net.ParseIP(*endpointIP) == nil {
 			log.Debug("--endpoint is not an IP, checking for interface names")
 
@@ -79,7 +78,7 @@ func Join(cmd *cli.Cmd) {
 		})
 		if err != nil {
 			log.WithError(err).Trace("internal error")
-			log.Errorf("Unable to join network: %s", err)
+			log.Errorf("Unable to join mesh: %s", err)
 		}
 	}
 }

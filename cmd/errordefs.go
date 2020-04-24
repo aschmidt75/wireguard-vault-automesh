@@ -6,4 +6,5 @@ const (
 	exitMissingOrInvalidCIDR = 11
 	exitInvalidParam         = 12
 	exitUnableToJoin         = 20
+	exitUnableToUpdate       = 21
 )
