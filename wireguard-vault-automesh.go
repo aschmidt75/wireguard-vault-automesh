@@ -30,6 +30,7 @@ func main() {
 	app.Command("create", "create a wireguard mesh meeting point", cmd.Create)
 	app.Command("join", "join a wireguard mesh", cmd.Join)
 	app.Command("update", "update peers for a wireguard mesh", cmd.Update)
+	app.Command("leave", "leave a wireguard mesh", cmd.Leave)
 
 	app.Before = func() {
 		if debug != nil {

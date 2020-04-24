@@ -7,4 +7,5 @@ const (
 	exitInvalidParam         = 12
 	exitUnableToJoin         = 20
 	exitUnableToUpdate       = 21
+	exitUnableToLeave        = 22
 )

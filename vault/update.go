@@ -30,13 +30,6 @@ func (vc *VaultContext) Update(req *UpdateRequest) error {
 		return err
 	}
 
-	// query all nodes.
-	nodes, err := vc.ReadNodes(req.MeshName)
-	if err != nil {
-		log.WithError(err).Error("Error reading from vault")
-		return err
-	}
-
 	// at this point, we have a local wg interface with a public key
 	// that's uniquely present in the nodelist.
 	// - Assign the overlay IP address to the interface
@@ -51,10 +44,20 @@ func (vc *VaultContext) Update(req *UpdateRequest) error {
 		sleepTimeSecs = 60
 	}
 	finishTime := time.Now().Local().Add(time.Second * time.Duration(req.WaitSecs))
-	log.WithField("finishAt", finishTime).Trace("Running at least once until")
+	log.WithFields(log.Fields{
+		"finishAt":      finishTime,
+		"sleepTimeSecs": sleepTimeSecs,
+	}).Trace("Running at least once until")
 
 	for {
-		// connect to all others
+		// query all nodes.
+		nodes, err := vc.ReadNodes(req.MeshName)
+		if err != nil {
+			log.WithError(err).Error("Error reading from vault")
+			return err
+		}
+
+		// connect to all others which are not yet connected
 		for nodeKey, nodeData := range nodes {
 			if nodeKey == req.NodeID {
 				// this is us.
@@ -79,6 +82,34 @@ func (vc *VaultContext) Update(req *UpdateRequest) error {
 					"key":       nodeKey,
 					"othernode": nodeData,
 				}).Debug("Added wg peer")
+			}
+		}
+
+		// scan through peer list of my own interface, remove all nodes
+		// that are not in node list any more
+		removalList := make([]string, 0)
+
+		wgi.IterateWgPeers(func(pubkey string) {
+			bFound := false
+			for nodeKey, nodeData := range nodes {
+				if nodeKey == req.NodeID {
+					// this is us.
+					continue
+				}
+				if nodeData.WireguardPublicKey == pubkey {
+					bFound = true
+				}
+			}
+			if !bFound {
+				removalList = append(removalList, pubkey)
+			}
+		})
+
+		log.WithField("removalList", removalList).Trace("Update.dump")
+		for _, pubkeyPeerToRemove := range removalList {
+			err = wgi.RemoveWgPeer(pubkeyPeerToRemove)
+			if err != nil {
+				log.WithError(err).Debug("Unable to remove peer")
 			}
 		}
 

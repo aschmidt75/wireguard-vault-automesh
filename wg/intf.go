@@ -319,6 +319,135 @@ func (wgi *WireguardInterface) AddPeer(remoteEndpointIP string, listenPort int, 
 	return true, nil
 }
 
+// RemoveWgInterface takes down an existing wireguard interface
+func (wgi *WireguardInterface) RemoveWgInterface() error {
+	i, err := net.InterfaceByName(wgi.InterfaceName)
+
+	if err != nil {
+		return err
+	}
+	if i == nil {
+		e := fmt.Sprintf("No network/interface by name %s", wgi.InterfaceName)
+		return errors.New(e)
+	}
+
+	// remove all peers (necessary?)
+
+	// take down wireguard interface
+	cmd := exec.Command("/sbin/ip", "link", "set", "down", "dev", wgi.InterfaceName)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	_, errStr := string(stdout.Bytes()), string(stderr.Bytes())
+	if len(errStr) > 0 {
+		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
+		return errors.New(e)
+	}
+
+	// remove wireguard interface
+	cmd = exec.Command("/sbin/ip", "link", "delete", "dev", wgi.InterfaceName, "type", "wireguard")
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+	_, errStr = string(stdout.Bytes()), string(stderr.Bytes())
+	if len(errStr) > 0 {
+		e := fmt.Sprintf("/sbin/ip reported: %s", errStr)
+		return errors.New(e)
+	}
+
+	log.WithFields(log.Fields{"intf": wgi.InterfaceName}).Info("Removed wireguard interface")
+
+	return nil
+}
+
+// RemoveAllWgPeers takes down all peers of an existing interface
+func (wgi *WireguardInterface) RemoveAllWgPeers() error {
+	wgClient, err := wg.New()
+	if err != nil {
+		return err
+	}
+	defer wgClient.Close()
+
+	newConfig := wgtypes.Config{
+		ReplacePeers: true,
+		Peers:        []wgtypes.PeerConfig{},
+	}
+
+	log.WithFields(log.Fields{"new": newConfig}).Trace("removing all peers...")
+	err = wgClient.ConfigureDevice(wgi.InterfaceName, newConfig)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{"intf": wgi.InterfaceName}).Info("Removed all peers.")
+
+	return nil
+}
+
+// RemoveWgPeer takes down a single peer of an existing interface
+func (wgi *WireguardInterface) RemoveWgPeer(pubkey string) error {
+	wgClient, err := wg.New()
+	if err != nil {
+		return err
+	}
+	defer wgClient.Close()
+
+	// process peer
+	pk, err := wgtypes.ParseKey(pubkey)
+	if err != nil {
+		return err
+	}
+
+	newConfig := wgtypes.Config{
+		ReplacePeers: false,
+		Peers: []wgtypes.PeerConfig{
+			wgtypes.PeerConfig{
+				PublicKey: pk,
+				Remove:    true,
+			},
+		},
+	}
+
+	log.WithFields(log.Fields{"new": newConfig}).Trace("removing peer...")
+	err = wgClient.ConfigureDevice(wgi.InterfaceName, newConfig)
+	if err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{"intf": wgi.InterfaceName, "PubKey": pubkey}).Info("Removed peer.")
+
+	return nil
+}
+
+// IterateWgPeerFunc is a callback
+type IterateWgPeerFunc func(pubkey string)
+
+// IterateWgPeers reads all peers from given device and calls the func
+func (wgi *WireguardInterface) IterateWgPeers(cb IterateWgPeerFunc) error {
+	wgClient, err := wg.New()
+	if err != nil {
+		return err
+	}
+	defer wgClient.Close()
+
+	wgDevice, err := wgClient.Device(wgi.InterfaceName)
+	if err != nil {
+		return err
+	}
+	for _, peer := range wgDevice.Peers {
+		cb(base64.StdEncoding.EncodeToString(peer.PublicKey[:]))
+	}
+
+	return nil
+}
+
 var (
 	emptyBytes32 = []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 )

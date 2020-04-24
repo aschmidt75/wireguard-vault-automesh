@@ -51,3 +51,12 @@ func (vc *VaultContext) UpdateEndpoint(meshName string, nodeIDKey string, endpoi
 
 	return nil
 }
+
+func (vc *VaultContext) DeleteNode(meshName string, nodeID string) error {
+	_, err := vc.Logical().Delete(DataPath(meshName, fmt.Sprintf("nodes/%s", nodeID)))
+	if err != nil {
+		return err
+	}
+	_, err = vc.Logical().Delete(MetaDataPath(meshName, fmt.Sprintf("nodes/%s", nodeID)))
+	return err
+}
