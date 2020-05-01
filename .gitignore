@@ -18,3 +18,4 @@ wireguard-vault-automesh
 release/*
 sync.sh
 cover.out
+.vscode/
