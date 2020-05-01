@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// UniqueID creates a unique ID for this node, by computing md5 of the hostname.
 func UniqueID() string {
 	hn, err := os.Hostname()
 	if err != nil {

@@ -84,6 +84,9 @@ func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 
 	// Assign IP if not yet present
 	a, err := i.Addrs()
+	if err != nil {
+		return err
+	}
 	if len(a) == 0 {
 		cmd := exec.Command("/sbin/ip", "address", "add", "dev", wgi.InterfaceName, wgi.IP.String())
 		var stdout, stderr bytes.Buffer
@@ -113,6 +116,7 @@ func (wgi *WireguardInterface) EnsureIPAddressIsAssigned() error {
 	return nil
 }
 
+// EnsureInterfaceIsUp checks if the wireguard interface is up. if not, up's it. all using /sbin/ip
 func (wgi *WireguardInterface) EnsureInterfaceIsUp() error {
 
 	// bring up wireguard interface
@@ -152,6 +156,7 @@ func (wgi *WireguardInterface) EnsureInterfaceIsUp() error {
 	return nil
 }
 
+// EnsureRouteIsSet checks if there is a route to given network. If not, adds it. all using /sbin/ip
 func (wgi *WireguardInterface) EnsureRouteIsSet(networkCIDR string) error {
 
 	//
@@ -193,6 +198,9 @@ func (wgi *WireguardInterface) EnsureRouteIsSet(networkCIDR string) error {
 	return nil
 }
 
+// SetupInterfaceWithConfig makes sure that the wireguard interface
+// has a keypair and a listen port configured. Extracts public key
+// part and stores it in wgi.
 func (wgi *WireguardInterface) SetupInterfaceWithConfig() error {
 	// wireguard: create private key, add device (listen-port)
 	wgClient, err := wg.New()

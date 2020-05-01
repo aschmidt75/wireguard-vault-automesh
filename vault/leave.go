@@ -18,7 +18,7 @@ type LeaveRequest struct {
 }
 
 // Leave takes data from the LeaveRequest to leave the mesh
-func (vc *VaultContext) Leave(req *LeaveRequest) error {
+func (vc *Context) Leave(req *LeaveRequest) error {
 	log.WithField("req", *req).Trace("Leave.param")
 
 	wgi := &wg.WireguardInterface{

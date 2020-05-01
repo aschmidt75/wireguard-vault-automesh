@@ -9,7 +9,7 @@ import (
 )
 
 // Create accesses vault to create the mesh namework data
-func (vc *VaultContext) Create(name string, networkCidr string) (bool, error) {
+func (vc *Context) Create(name string, networkCidr string) (bool, error) {
 
 	mi := model.MeshInfo{
 		Name:        name,

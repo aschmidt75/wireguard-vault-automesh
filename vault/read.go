@@ -11,7 +11,7 @@ import (
 )
 
 // ReadMeetingPoint accesses vault to read the mesh namework data from the meeting point
-func (vc *VaultContext) ReadMeetingPoint(meshName string) (*model.MeshInfo, error) {
+func (vc *Context) ReadMeetingPoint(meshName string) (*model.MeshInfo, error) {
 	l := vc.Logical()
 
 	p := DataPath(meshName, "mp")
@@ -43,7 +43,7 @@ func (vc *VaultContext) ReadMeetingPoint(meshName string) (*model.MeshInfo, erro
 }
 
 // ReadNodes reads the list of nodes from vault
-func (vc *VaultContext) ReadNodes(meshName string) (model.NodeMap, error) {
+func (vc *Context) ReadNodes(meshName string) (model.NodeMap, error) {
 	l := vc.Logical()
 
 	p := MetaDataPath(meshName, "nodes")
@@ -106,7 +106,7 @@ func (vc *VaultContext) ReadNodes(meshName string) (model.NodeMap, error) {
 }
 
 // ReadNode reads a single node data from vault
-func (vc *VaultContext) ReadNode(meshName, key string) (model.NodeInfo, error) {
+func (vc *Context) ReadNode(meshName, key string) (model.NodeInfo, error) {
 	l := vc.Logical()
 
 	p := MetaDataPath(meshName, "nodes")

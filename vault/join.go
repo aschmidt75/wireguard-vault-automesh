@@ -43,7 +43,7 @@ func newIPInNet(networkCIDR string) (net.IP, error) {
 }
 
 // Join takes data from the JoinRequest to join the mesh
-func (vc *VaultContext) Join(req *JoinRequest) error {
+func (vc *Context) Join(req *JoinRequest) error {
 	log.WithField("req", *req).Trace("Join.param")
 
 	// read all nodes from vault for this mesh network
@@ -191,7 +191,7 @@ func (vc *VaultContext) Join(req *JoinRequest) error {
 	return nil
 }
 
-func (vc *VaultContext) setupWireguard(req *JoinRequest) (*wg.WireguardInterface, error) {
+func (vc *Context) setupWireguard(req *JoinRequest) (*wg.WireguardInterface, error) {
 	wgi := &wg.WireguardInterface{
 		InterfaceName: fmt.Sprintf("wg-%s", req.MeshInfo.Name),
 		ListenPort:    req.ListenPort,

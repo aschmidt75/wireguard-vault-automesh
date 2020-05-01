@@ -12,6 +12,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	version string
+)
+
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
@@ -19,7 +23,7 @@ func main() {
 
 	app := cli.App("wireguard-vault-automesh", "Automatically connect nodes to a mesh using wireguard and vault")
 
-	app.Version("version", "0.0.1")
+	app.Version("version", version)
 
 	app.Spec = "[-d] [-v]"
 

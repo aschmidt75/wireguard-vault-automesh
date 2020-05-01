@@ -8,20 +8,24 @@ import (
 	"github.com/hashicorp/vault/api"
 )
 
-type VaultContext struct {
+// Context contains links on how to connect to vault
+// and keeps the api client reference
+type Context struct {
 	client *api.Client
 }
 
+// DataPath construct a vault path into the data structure for a given mesh and subkey
 func DataPath(meshName, p string) string {
 	return fmt.Sprintf("%s/data/%s/%s", config.Config().VaultEnginePath, meshName, p)
 }
 
+// MetaDataPath construct a vault path into the meta data structure for a given mesh and subkey
 func MetaDataPath(meshName, p string) string {
 	return fmt.Sprintf("%s/metadata/%s/%s", config.Config().VaultEnginePath, meshName, p)
 }
 
-// Vault returns a VaultContext struct with a token
-func Vault() *VaultContext {
+// Vault returns a Context struct with a token
+func Vault() *Context {
 	c := config.Config()
 
 	cfg := api.DefaultConfig()
@@ -49,14 +53,14 @@ func Vault() *VaultContext {
 	//	log.WithField("client", client).Trace("vault client")
 	client.SetToken(c.VaultToken)
 
-	return &VaultContext{
+	return &Context{
 		client: client,
 	}
 
 }
 
 // Logical returns vaults' api.Logical struct
-func (vc *VaultContext) Logical() *api.Logical {
+func (vc *Context) Logical() *api.Logical {
 
 	return vc.client.Logical()
 

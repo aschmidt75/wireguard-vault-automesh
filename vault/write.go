@@ -7,7 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func (vc *VaultContext) WriteNodeData(meshName string, nodeInfo model.NodeInfo) error {
+// WriteNodeData writes the nodeInfo to the nodelist of meshName
+func (vc *Context) WriteNodeData(meshName string, nodeInfo model.NodeInfo) error {
 	data := map[string]interface{}{
 		"data": map[string]interface{}{
 			"nodeID":       nodeInfo.NodeID,
@@ -24,7 +25,8 @@ func (vc *VaultContext) WriteNodeData(meshName string, nodeInfo model.NodeInfo) 
 	return err
 }
 
-func (vc *VaultContext) UpdateEndpoint(meshName string, nodeIDKey string, endpointIP string, listenPort int) error {
+// UpdateEndpoint updates the fields id, ip, listenport for a given node in a mesh
+func (vc *Context) UpdateEndpoint(meshName string, nodeIDKey string, endpointIP string, listenPort int) error {
 	nodeInfo, err := vc.ReadNode(meshName, nodeIDKey)
 	if err != nil {
 		return err
@@ -52,7 +54,8 @@ func (vc *VaultContext) UpdateEndpoint(meshName string, nodeIDKey string, endpoi
 	return nil
 }
 
-func (vc *VaultContext) DeleteNode(meshName string, nodeID string) error {
+// DeleteNode deletes the node data and metadata, indicated by nodeID and meshName
+func (vc *Context) DeleteNode(meshName string, nodeID string) error {
 	_, err := vc.Logical().Delete(DataPath(meshName, fmt.Sprintf("nodes/%s", nodeID)))
 	if err != nil {
 		return err

@@ -20,7 +20,7 @@ type UpdateRequest struct {
 }
 
 // Update takes data from the UpdateRequest to listen for peer updates
-func (vc *VaultContext) Update(req *UpdateRequest) error {
+func (vc *Context) Update(req *UpdateRequest) error {
 	log.WithField("req", *req).Trace("Update.param")
 
 	// ensure we have a wireguard interface w/ key
@@ -124,7 +124,7 @@ func (vc *VaultContext) Update(req *UpdateRequest) error {
 	return nil
 }
 
-func (vc *VaultContext) setupWireguardForUpdate(req *UpdateRequest) (*wg.WireguardInterface, error) {
+func (vc *Context) setupWireguardForUpdate(req *UpdateRequest) (*wg.WireguardInterface, error) {
 	wgi := &wg.WireguardInterface{
 		InterfaceName: fmt.Sprintf("wg-%s", req.MeshInfo.Name),
 	}
