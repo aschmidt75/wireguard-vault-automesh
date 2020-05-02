@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -77,8 +78,9 @@ func Join(cmd *cli.Cmd) {
 			ListenPort: config.Config().DefaultEndpointListenPort,
 		})
 		if err != nil {
-			log.WithError(err).Trace("internal error")
-			log.Errorf("Unable to join mesh: %s", err)
+			log.WithError(err).Errorf("Unable to join mesh: %s", *meshName)
+			os.Exit(exitUnableToJoin)
 		}
+		fmt.Printf("Joined mesh network '%s'.\n", *meshName)
 	}
 }

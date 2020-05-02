@@ -53,13 +53,3 @@ func (vc *Context) UpdateEndpoint(meshName string, nodeIDKey string, endpointIP 
 
 	return nil
 }
-
-// DeleteNode deletes the node data and metadata, indicated by nodeID and meshName
-func (vc *Context) DeleteNode(meshName string, nodeID string) error {
-	_, err := vc.Logical().Delete(DataPath(meshName, fmt.Sprintf("nodes/%s", nodeID)))
-	if err != nil {
-		return err
-	}
-	_, err = vc.Logical().Delete(MetaDataPath(meshName, fmt.Sprintf("nodes/%s", nodeID)))
-	return err
-}

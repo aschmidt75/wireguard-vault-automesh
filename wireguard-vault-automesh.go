@@ -32,6 +32,7 @@ func main() {
 	vaultAddrParam := app.StringOpt("a addr", c.VaultAddr, "Set vault endpoint (env: WGVAM_VAULT_ADDR)")
 
 	app.Command("create", "create a wireguard mesh meeting point", cmd.Create)
+	app.Command("delete", "delete a wireguard mesh meeting point and all node data", cmd.Delete)
 	app.Command("join", "join a wireguard mesh", cmd.Join)
 	app.Command("update", "update peers for a wireguard mesh", cmd.Update)
 	app.Command("leave", "leave a wireguard mesh", cmd.Leave)
@@ -49,7 +50,7 @@ func main() {
 
 		// issue warning if we do not have a token. may continue using vault agent.
 		if len(c.VaultToken) == 0 {
-			log.Warn("No vault token supplied, trying without. (env: WGVAM_VAULT_TOKEN)")
+			log.Warn("No vault token supplied, assuming agent mode. (env: WGVAM_VAULT_TOKEN)")
 		}
 		if len(*vaultAddrParam) > 0 {
 			c.VaultAddr = *vaultAddrParam

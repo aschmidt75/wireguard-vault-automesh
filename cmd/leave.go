@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/aschmidt75/wireguard-vault-automesh/config"
@@ -45,9 +46,10 @@ func Leave(cmd *cli.Cmd) {
 			NodeID:   *nodeID,
 		})
 		if err != nil {
-			log.WithError(err).Trace("internal error")
-			log.Errorf("Unable to leave mesh: %s", err)
+			log.WithError(err).Errorf("Unable to leave mesh: %s", *meshName)
 			os.Exit(exitUnableToLeave)
 		}
+		fmt.Printf("Left mesh network '%s'.\n", *meshName)
+
 	}
 }

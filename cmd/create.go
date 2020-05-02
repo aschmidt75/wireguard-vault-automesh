@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net"
 	"os"
 
@@ -40,13 +41,12 @@ func Create(cmd *cli.Cmd) {
 
 		bCreated, err := vc.Create(*meshName, *networkCidr)
 		if err != nil {
-			log.WithError(err).Trace("internal error")
-			log.Errorf("Unable to create network: %s", err)
+			log.WithError(err).Errorf("Unable to create network: %s", *meshName)
 		}
 		if bCreated {
-			log.Info("Mesh network created")
+			fmt.Printf("Mesh network '%s' created.\n", *meshName)
 		} else {
-			log.Info("Mesh network already present")
+			fmt.Printf("Mesh network '%s' already present.\n", *meshName)
 		}
 	}
 }

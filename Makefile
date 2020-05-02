@@ -6,7 +6,7 @@ all: clean vet lint build
 
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -i -v -o release/${BINARY_NAME} -ldflags="-X main.version=${VERSION}" *.go
+	go build -o release/${BINARY_NAME} -ldflags="-X main.version=${VERSION}" *.go
 
 vet:
 	@go vet ./...

@@ -53,3 +53,13 @@ Disconnect all peers and remove my own wireguard interface.
 ```
 $ sudo -E ./wireguard-vault-automesh -d join --name=mesh1 --endpoint=eth0
 ```
+
+### Delete a mesh network
+
+Discover the meeting point for 'mesh1'. Remove all data, all nodes and the
+meeting point itselfs. Nodes will not be able to join any more.
+Existing wireguard interfaces and settings will remain.
+
+```
+$ sudo -E ./wireguard-vault-automesh -d delete --name=mesh1 
+```

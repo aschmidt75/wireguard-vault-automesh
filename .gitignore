@@ -19,3 +19,4 @@ release/*
 sync.sh
 cover.out
 .vscode/
+_repos

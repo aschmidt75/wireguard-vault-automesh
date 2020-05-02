@@ -51,7 +51,11 @@ func Vault() *Context {
 		return nil
 	}
 	//	log.WithField("client", client).Trace("vault client")
-	client.SetToken(c.VaultToken)
+	if c.VaultToken != "" {
+		client.SetToken(c.VaultToken)
+	} else {
+		client.ClearToken()
+	}
 
 	return &Context{
 		client: client,
