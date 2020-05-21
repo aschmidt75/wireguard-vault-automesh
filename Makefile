@@ -8,6 +8,8 @@ all: clean vet lint build
 build:
 	go build -o release/${BINARY_NAME} -ldflags="-X main.version=${VERSION}" *.go
 
+build-linux:
+	GOOS=linux GOARCH=amd64 go build -o release/${BINARY_NAME}-linux-amd64 -ldflags="-X main.version=${VERSION}" *.go
 vet:
 	@go vet ./...
 
