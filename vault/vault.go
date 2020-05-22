@@ -33,18 +33,6 @@ func Vault() *Context {
 
 	cfg.Address = c.VaultAddr
 	cfg.HttpClient.Timeout = 10 * time.Second
-	/*
-		// set up TLS
-		err := cfg.ConfigureTLS(&api.TLSConfig{
-			CACert:     "../pki/a112.aleri.local-ca-chain.crt",
-			ClientCert: "../pki/vault-client.a112.aleri.local.crt",
-			ClientKey:  "../pki/vault-client.a112.aleri.local.key",
-			Insecure:   false,
-		})
-		if err != nil {
-			return err
-		}
-	*/
 
 	client, err := api.NewClient(cfg)
 	if err != nil {
