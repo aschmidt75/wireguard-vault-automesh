@@ -1,6 +1,8 @@
 # wireguard-vault-automesh
 Automatically connect nodes to a mesh using wireguard and vault.
 
+![Go](https://github.com/aschmidt75/wireguard-vault-automesh/workflows/Go/badge.svg)
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/aschmidt75/wireguard-vault-automesh)](https://goreportcard.com/report/github.com/aschmidt75/wireguard-vault-automesh)
 
 `wireguard-vault-automesh` is a non-daemon CLI helper aiming at simplifying the setup of a fully meshed network between a number of nodes. When connecting nodes via wireguard, each node has to know the public key and endpoint ip:port of all remotes. While for static setups this can be done using e.g. configuration management, dynamic setups with nodes coming and going, often with varying ip addresses are more difficult to manage.
